@@ -1,0 +1,87 @@
+import { Request, Response, NextFunction } from 'express';
+import { authService } from './auth.service';
+import { ApiResponse } from '../../shared/utils/apiResponse';
+
+const REFRESH_TOKEN_COOKIE = 'refreshToken';
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: '/',
+};
+
+export class AuthController {
+  async register(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { user, tokens } = await authService.register(req.body);
+
+      // Set refresh token as HttpOnly cookie
+      res.cookie(REFRESH_TOKEN_COOKIE, tokens.refreshToken, COOKIE_OPTIONS);
+
+      ApiResponse.created(res, {
+        user,
+        accessToken: tokens.accessToken,
+      }, 'Registration successful');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { user, tokens } = await authService.login(req.body);
+
+      // Set refresh token as HttpOnly cookie
+      res.cookie(REFRESH_TOKEN_COOKIE, tokens.refreshToken, COOKIE_OPTIONS);
+
+      ApiResponse.success(res, {
+        user,
+        accessToken: tokens.accessToken,
+      }, 'Login successful');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE];
+
+      if (refreshToken) {
+        await authService.logout(refreshToken);
+      }
+
+      // Clear cookie
+      res.clearCookie(REFRESH_TOKEN_COOKIE, { path: '/' });
+
+      ApiResponse.success(res, null, 'Logged out successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const oldRefreshToken = req.cookies[REFRESH_TOKEN_COOKIE];
+
+      if (!oldRefreshToken) {
+        ApiResponse.unauthorized(res, 'Refresh token is required', 'AUTH_004');
+        return;
+      }
+
+      const tokens = await authService.refreshToken(oldRefreshToken);
+
+      // Set new refresh token cookie
+      res.cookie(REFRESH_TOKEN_COOKIE, tokens.refreshToken, COOKIE_OPTIONS);
+
+      ApiResponse.success(res, {
+        accessToken: tokens.accessToken,
+      }, 'Token refreshed successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+export const authController = new AuthController();
