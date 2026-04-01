@@ -225,10 +225,7 @@ export const handleMessage = (io: Server, socket: AuthenticatedSocket) => {
   socket.on('pin_message', async (data: { messageId: string; conversationId: string }) => {
     try {
       const conversation = await conversationService.pinMessage(data.conversationId, userId, data.messageId);
-      io.to(`conversation:${data.conversationId}`).emit('conversation_updated', {
-        conversationId: data.conversationId,
-        pinnedMessages: conversation?.pinnedMessages,
-      });
+      io.to(`conversation:${data.conversationId}`).emit('conversation_updated', conversation);
     } catch (error: any) {
       socket.emit('error', {
         code: 'PIN_ERROR',
@@ -242,10 +239,7 @@ export const handleMessage = (io: Server, socket: AuthenticatedSocket) => {
   socket.on('unpin_message', async (data: { messageId: string; conversationId: string }) => {
     try {
       const conversation = await conversationService.unpinMessage(data.conversationId, userId, data.messageId);
-      io.to(`conversation:${data.conversationId}`).emit('conversation_updated', {
-        conversationId: data.conversationId,
-        pinnedMessages: conversation?.pinnedMessages,
-      });
+      io.to(`conversation:${data.conversationId}`).emit('conversation_updated', conversation);
     } catch (error: any) {
       socket.emit('error', {
         code: 'UNPIN_ERROR',
