@@ -26,15 +26,6 @@ export interface IUserPublic {
   createdAt: Date;
 }
 
-// ============ RefreshToken Types ============
-export interface IRefreshToken {
-  _id: Types.ObjectId;
-  userId: Types.ObjectId;
-  token: string;
-  expiresAt: Date;
-  createdAt: Date;
-}
-
 // ============ Conversation Types ============
 export interface IConversationMember {
   userId: Types.ObjectId;

@@ -58,10 +58,6 @@ export class AuthService {
     const accessToken = this.generateAccessToken(payload);
     const refreshToken = this.generateRefreshToken(payload);
 
-    // Save refresh token
-    const refreshExpires = new Date();
-    refreshExpires.setDate(refreshExpires.getDate() + 7);
-    await authRepository.saveRefreshToken(user._id.toString(), refreshToken, refreshExpires);
 
     return {
       user: this.toPublicUser(user),
@@ -87,10 +83,6 @@ export class AuthService {
     const accessToken = this.generateAccessToken(payload);
     const refreshToken = this.generateRefreshToken(payload);
 
-    // Save refresh token
-    const refreshExpires = new Date();
-    refreshExpires.setDate(refreshExpires.getDate() + 7);
-    await authRepository.saveRefreshToken(user._id.toString(), refreshToken, refreshExpires);
 
     return {
       user: this.toPublicUser(user),
@@ -99,7 +91,8 @@ export class AuthService {
   }
 
   async logout(refreshToken: string): Promise<void> {
-    await authRepository.deleteRefreshToken(refreshToken);
+    // With stateless JWT, we rely on token expiration on client side removing it
+    // In a real app we might put it on a redis blacklist
   }
 
   async refreshToken(oldRefreshToken: string): Promise<AuthTokens> {
@@ -111,24 +104,12 @@ export class AuthService {
       throw new AppError('Invalid refresh token', 'AUTH_004', 401);
     }
 
-    // Check if refresh token exists in DB
-    const storedToken = await authRepository.findRefreshToken(oldRefreshToken);
-    if (!storedToken) {
-      throw new AppError('Refresh token not found or already revoked', 'AUTH_004', 401);
-    }
-
-    // Delete old refresh token
-    await authRepository.deleteRefreshToken(oldRefreshToken);
+    // Since we removed DB whitelisting, we rely solely on JWT verification
 
     // Generate new tokens
     const payload: JwtPayload = { userId: decoded.userId, email: decoded.email };
     const newAccessToken = this.generateAccessToken(payload);
     const newRefreshToken = this.generateRefreshToken(payload);
-
-    // Save new refresh token
-    const refreshExpires = new Date();
-    refreshExpires.setDate(refreshExpires.getDate() + 7);
-    await authRepository.saveRefreshToken(decoded.userId, newRefreshToken, refreshExpires);
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }

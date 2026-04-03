@@ -18,6 +18,8 @@ import searchRoutes from './modules/search/search.routes';
 import notificationRoutes from './modules/notifications/notification.routes';
 
 const app = express();
+app.set('trust proxy', 1);
+
 
 // ============ Global Middleware ============
 app.use(helmet());

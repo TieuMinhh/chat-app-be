@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from './auth.service';
+import { env } from '../../config/env';
 import { ApiResponse } from '../../shared/utils/apiResponse';
 
 const REFRESH_TOKEN_COOKIE = 'refreshToken';
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
+  secure: env.NODE_ENV === 'production',
+  sameSite: env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   path: '/',
 };
