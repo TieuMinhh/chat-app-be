@@ -53,8 +53,9 @@ export class AuthController {
         await authService.logout(refreshToken);
       }
 
-      // Clear cookie
-      res.clearCookie(REFRESH_TOKEN_COOKIE, { path: '/' });
+      // Clear cookie with same options as when it was set
+      const { maxAge, ...clearOptions } = COOKIE_OPTIONS;
+      res.clearCookie(REFRESH_TOKEN_COOKIE, clearOptions);
 
       ApiResponse.success(res, null, 'Logged out successfully');
     } catch (error) {
