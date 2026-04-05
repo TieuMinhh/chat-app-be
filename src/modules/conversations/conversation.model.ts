@@ -42,6 +42,18 @@ const conversationSchema = new Schema<IConversationDocument>(
       senderId: Schema.Types.ObjectId,
       messageType: String,
       createdAt: Date,
+      readBy: [
+        {
+          userId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+          },
+          readAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
     },
     pinnedMessages: [
       {

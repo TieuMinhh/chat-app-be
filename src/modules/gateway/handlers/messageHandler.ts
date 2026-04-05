@@ -138,10 +138,15 @@ export const handleMessage = (io: Server, socket: AuthenticatedSocket) => {
     try {
       await messageService.markAsRead(data.conversationId, userId);
 
-      socket.to(`conversation:${data.conversationId}`).emit('message_read', {
-        conversationId: data.conversationId,
-        userId,
-        readAt: new Date(),
+      // Broadcast to ALL members via their specific user rooms
+      // This ensures all devices (even those in the chat list) get the update
+      const memberIds = await conversationRepository.getMemberIds(data.conversationId);
+      memberIds.forEach((id) => {
+        io.to(`user:${id}`).emit('message_read', {
+          conversationId: data.conversationId,
+          userId,
+          readAt: new Date(),
+        });
       });
     } catch (error: any) {
       console.error('Error marking read:', error);

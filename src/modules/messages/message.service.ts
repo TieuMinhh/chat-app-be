@@ -64,6 +64,20 @@ export class MessageService {
 
   async markAsRead(conversationId: string, userId: string) {
     await messageRepository.markRead(conversationId, userId);
+    
+    // Also update the conversation's lastMessage readBy status
+    // Find the current last message of this conversation
+    const { messages } = await messageRepository.findByConversation(conversationId, { limit: 1 });
+    if (messages.length > 0) {
+      const lastMsg = messages[0];
+      await conversationRepository.updateLastMessage(conversationId, {
+        content: lastMsg.content,
+        senderId: (typeof lastMsg.senderId === 'object' ? (lastMsg.senderId as any)._id : lastMsg.senderId).toString(),
+        messageType: lastMsg.messageType,
+        createdAt: lastMsg.createdAt as any,
+        readBy: lastMsg.readBy as any
+      });
+    }
   }
 
   async addReaction(messageId: string, userId: string, emoji: string) {

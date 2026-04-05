@@ -42,7 +42,13 @@ export class ConversationRepository {
 
   async updateLastMessage(
     conversationId: string,
-    lastMessage: { content: string; senderId: string; messageType: string; createdAt: Date }
+    lastMessage: { 
+      content: string; 
+      senderId: string; 
+      messageType: string; 
+      createdAt: Date;
+      readBy?: { userId: string; readAt: Date }[]
+    }
   ): Promise<void> {
     await Conversation.findByIdAndUpdate(conversationId, {
       $set: { lastMessage },

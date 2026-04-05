@@ -17,12 +17,13 @@ export class AuthController {
     try {
       const { user, tokens } = await authService.register(req.body);
 
-      // Set refresh token as HttpOnly cookie
+      // Set refresh token as HttpOnly cookie (for web)
       res.cookie(REFRESH_TOKEN_COOKIE, tokens.refreshToken, COOKIE_OPTIONS);
 
       ApiResponse.created(res, {
         user,
         accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken, // Also return in body for mobile
       }, 'Registration successful');
     } catch (error) {
       next(error);
@@ -33,12 +34,13 @@ export class AuthController {
     try {
       const { user, tokens } = await authService.login(req.body);
 
-      // Set refresh token as HttpOnly cookie
+      // Set refresh token as HttpOnly cookie (for web)
       res.cookie(REFRESH_TOKEN_COOKIE, tokens.refreshToken, COOKIE_OPTIONS);
 
       ApiResponse.success(res, {
         user,
         accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken, // Also return in body for mobile
       }, 'Login successful');
     } catch (error) {
       next(error);
@@ -47,7 +49,7 @@ export class AuthController {
 
   async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE];
+      const refreshToken = req.cookies[REFRESH_TOKEN_COOKIE] || req.body.refreshToken;
 
       if (refreshToken) {
         await authService.logout(refreshToken);
@@ -65,7 +67,7 @@ export class AuthController {
 
   async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const oldRefreshToken = req.cookies[REFRESH_TOKEN_COOKIE];
+      const oldRefreshToken = req.cookies[REFRESH_TOKEN_COOKIE] || req.body.refreshToken;
 
       if (!oldRefreshToken) {
         ApiResponse.unauthorized(res, 'Refresh token is required', 'AUTH_004');
@@ -79,6 +81,7 @@ export class AuthController {
 
       ApiResponse.success(res, {
         accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken, // Also return in body for mobile
       }, 'Token refreshed successfully');
     } catch (error) {
       next(error);
