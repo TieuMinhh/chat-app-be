@@ -9,8 +9,16 @@ export class UserRepository {
     return User.find({ _id: { $in: ids } });
   }
 
-  async updateProfile(id: string, data: Partial<{ username: string; avatar: string }>): Promise<IUserDocument | null> {
+  async updateProfile(id: string, data: Partial<{ displayName: string; avatar: string }>): Promise<IUserDocument | null> {
     return User.findByIdAndUpdate(id, { $set: data }, { new: true });
+  }
+
+  async findByIdWithPassword(id: string): Promise<IUserDocument | null> {
+    return User.findById(id).select('+password');
+  }
+
+  async updatePassword(id: string, password: string): Promise<void> {
+    await User.findByIdAndUpdate(id, { $set: { password } });
   }
 
   async updateStatus(id: string, status: 'online' | 'offline'): Promise<void> {

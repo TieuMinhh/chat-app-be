@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { userController } from './user.controller';
 import { authenticate } from '../../middleware/authenticate';
 import { validate } from '../../middleware/validate';
-import { updateProfileSchema } from './user.validation';
+import { updateProfileSchema, changePasswordSchema } from './user.validation';
 
 const router = Router();
 
@@ -21,5 +21,8 @@ router.put('/profile', upload.single('avatarFile'), validate(updateProfileSchema
 router.post('/:id/block', (req, res, next) => userController.blockUser(req, res, next));
 router.delete('/:id/block', (req, res, next) => userController.unblockUser(req, res, next));
 router.get('/:id/block-status', (req, res, next) => userController.checkBlockStatus(req, res, next));
+router.post('/change-password', validate(changePasswordSchema), (req, res, next) =>
+  userController.changePassword(req, res, next)
+);
 
 export default router;

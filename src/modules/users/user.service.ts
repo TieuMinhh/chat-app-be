@@ -1,5 +1,6 @@
+import bcrypt from 'bcrypt';
 import { userRepository } from './user.repository';
-import { UpdateProfileInput } from './user.validation';
+import { UpdateProfileInput, ChangePasswordInput } from './user.validation';
 import { AppError } from '../../middleware/errorHandler';
 import { IUserPublic } from '../../shared/types';
 
@@ -60,6 +61,21 @@ export class UserService {
 
   async checkBlockStatus(userId: string, targetUserId: string): Promise<{ blocked: boolean; blockedBy: string | null }> {
     return userRepository.isBlockedEitherWay(userId, targetUserId);
+  }
+
+  async changePassword(userId: string, input: ChangePasswordInput): Promise<void> {
+    const user = await userRepository.findByIdWithPassword(userId);
+    if (!user) {
+      throw new AppError('User not found', 'USER_001', 404);
+    }
+
+    const isPasswordValid = await bcrypt.compare(input.oldPassword, user.password);
+    if (!isPasswordValid) {
+      throw new AppError('Mật khẩu cũ không chính xác', 'USER_003', 400);
+    }
+
+    const hashedPassword = await bcrypt.hash(input.newPassword, 10);
+    await userRepository.updatePassword(userId, hashedPassword);
   }
 }
 

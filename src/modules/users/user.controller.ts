@@ -88,6 +88,15 @@ export class UserController {
       next(error);
     }
   }
+
+  async changePassword(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      await userService.changePassword(req.user!.userId, req.body);
+      ApiResponse.success(res, null, 'Đổi mật khẩu thành công');
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const userController = new UserController();
